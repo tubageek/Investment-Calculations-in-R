@@ -1,4 +1,4 @@
-# source("C:/R Packages/IRR.R")
+# Pull in any configuration information
 source("C:/R Packages/Config.R")
 
 pv <- function (cashflows, rate)
