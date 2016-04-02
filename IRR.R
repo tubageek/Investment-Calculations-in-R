@@ -43,6 +43,7 @@ getCurrentPrice <- function(fundSymbol)
 calculateIRR <- function(mutualFund)
 {
   library(RODBC)
+  
   dbhandle <- odbcDriverConnect(DBConnectionString)
   allTransactions <- sqlQuery(dbhandle, "select * from lta.MutualFundView")
   
