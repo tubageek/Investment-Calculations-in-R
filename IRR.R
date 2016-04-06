@@ -40,20 +40,25 @@ getCurrentPrice <- function(fundSymbol)
   return (as.numeric(parsedJson[[4]]))
 }
 
-calculateIRR <- function(mutualFund)
+solveIRR <- function(allTransactions) {
+  mutualFund <- allTransactions$MutualFundSymbol[1]
+  currentPrice <- getCurrentPrice(mutualFund)
+  numberOfShares <- sum(allTransactions$NumberOfShares)
+  investments <- subset(allTransactions, allTransactions$ReturnType == "Investment")
+  return (recSolve(investments, 0.0, 0, currentPrice * numberOfShares))
+}
+
+calculateIRR <- function()
 {
   library(RODBC)
   
   dbhandle <- odbcDriverConnect(DBConnectionString)
-  allTransactions <- sqlQuery(dbhandle, "select * from lta.MutualFundView")
+  allTransactions <- sqlQuery(dbhandle, "select * from lta.MutualFundView WHERE HasBalance = 1 AND IsRetirementFund = 0")
   
   allTransactions$TransactionDate <- as.Date(allTransactions$TransactionDate)
   allTransactions$Days <- as.integer(Sys.Date() - allTransactions$TransactionDate)
   
-  myTransactions <- subset(allTransactions, allTransactions$MutualFundSymbol == mutualFund)
-  numberOfShares <- sum(myTransactions$NumberOfShares)
-  currentValue <- getCurrentPrice(mutualFund)
-  investments <- subset(myTransactions, myTransactions$ReturnType == 'Investment')
-  
-  return (recSolve(investments, 0.0, 0, currentValue * numberOfShares))
+  fundFactor <- allTransactions$MutualFundSymbol
+
+  by(allTransactions, fundFactor, solveIRR)
 }
